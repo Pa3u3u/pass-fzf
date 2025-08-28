@@ -10,15 +10,19 @@ function candidate_selector_fzf() {
 }
 
 function usage() {
-    echo "Usage: $0 [-s] [query]"
+    echo "Usage: $0 [-s] [-C] [query]"
     exit 1
 }
 
 select_only=0
+clip=1
 
-while getopts "s" o
+while getopts "Cs" o
 do
     case "${o}" in
+        C)
+            clip=0
+            ;;
         s)
             select_only=1
             ;;
@@ -34,8 +38,13 @@ query="$@"
 res=$(candidate_selector_fzf "$query")
 if [ -n "$res" ]; then
     [ $select_only -ne 0 ] && echo "$res" && exit 0
-    pass show "$res" | tail -n +2 || exit $?
-    pass show -c "$res"
+
+    if [ $clip -eq 1 ]; then
+        pass show "$res" | tail -n +2 || exit $?
+        pass show -c "$res"
+    else
+        pass show "$res"
+    fi
 else
     exit 1
 fi
